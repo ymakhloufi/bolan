@@ -36,7 +36,6 @@ func (d DanskeBankCrawler) Crawl(channel chan<- model.InterestSet) {
 		d.logger.Error("failed reading Danske Bank website", zap.Error(err))
 		return
 	}
-	d.logger.Debug("parsed root nodes")
 
 	// this is the shaky part. If they change anything on their website structure, this is most likely gonna fail here
 	nodes, err := htmlquery.QueryAll(doc, "//table/tbody/tr/td/b[contains(text(), 'Belåningsgrad')]]")
@@ -48,7 +47,6 @@ func (d DanskeBankCrawler) Crawl(channel chan<- model.InterestSet) {
 		d.logger.Error("failed to find both tables with interest rates", zap.Error(err))
 		return
 	}
-	d.logger.Debug("found relevant tables")
 
 	// todo: get list prices
 	// todo: get historic average prices
@@ -58,13 +56,11 @@ func (d DanskeBankCrawler) Crawl(channel chan<- model.InterestSet) {
 	if err != nil {
 		d.logger.Error("failed to parse TableNodes", zap.Error(err))
 	}
-	d.logger.Debug("parsed interestSets", zap.Any("rows", interestSets))
 
 	unionOfferTable, err := d.parseTable(nodes[1].Parent.Parent.Parent.Parent, crawlTime)
 	if err != nil {
 		d.logger.Error("failed to parse TableNodes", zap.Error(err))
 	}
-	d.logger.Debug("parsed interestSets", zap.Any("rows", unionOfferTable))
 
 	for _, set := range append(interestSets, unionOfferTable...) {
 		channel <- set
@@ -135,7 +131,7 @@ func parseInterestRatesFromCellText(cell string) (nominal float32, effective flo
 		return 0, 0, fmt.Errorf("failed to parse nominal float for string '%s' in cell '%s' (sanitized: '%s'): %w", nominalStr, cell, sanitized, err)
 	}
 
-	effectiveStr := strings.Replace(parts[0], ",", ".", -1)
+	effectiveStr := strings.Replace(parts[1], ",", ".", -1)
 	effective64, err := strconv.ParseFloat(effectiveStr, 32)
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to parse effective float for string '%s' in cell '%s' (sanitized: '%s'): %w", effectiveStr, cell, sanitized, err)

@@ -20,8 +20,8 @@ const (
 	Term10years Term = "10y"
 
 	TypeListRate        Type = "list"
-	TypeAvgRate         Type = "avg"
-	TypeRatioDiscounted Type = "ratio"
+	TypeAvgRate         Type = "average"
+	TypeRatioDiscounted Type = "ratioDiscounted"
 )
 
 type Term string
